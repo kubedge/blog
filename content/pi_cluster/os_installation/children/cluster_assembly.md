@@ -13,7 +13,9 @@ tags: [ansible, rpi]
 published: true
 ---
 
-# Goal
+This page contains examples of harware to use in order to build a cluster
+
+<!--more-->
 
 ## Links
 
