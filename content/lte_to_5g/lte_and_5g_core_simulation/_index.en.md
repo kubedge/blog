@@ -8,5 +8,11 @@ chapter = true
 
 # LTE and 5G Core
 
+Kubedege created simulators for LTE EPC and the 5G Core.
+
+<!--more-->
+
+![](/images/hack4easy/kubectl_kubesim.png)
+
 {{%children style="h3" description="false" depth="1" sort="weight" %}}
 

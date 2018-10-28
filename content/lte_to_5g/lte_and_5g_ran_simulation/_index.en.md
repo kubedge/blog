@@ -8,4 +8,8 @@ chapter = true
 
 # LTE and 5G RAN
 
+Kubedge proposes simulators of LTE, eLTE and 5G NR nodes.
+
+<!--more-->
+
 {{%children style="h3" description="false" depth="1" sort="weight" %}}
