@@ -106,9 +106,8 @@ sudo hostnamectl set-hostname kubemaster-pi
 If you prefer to edit using vi instead of nano
 
 ```bash
-vi /etc/environment
-
-EDITOR=vi
+sudo update-alternatives --config editor
+# Type the number which corresponds to Vim here (after installing it) then press Enter.
 ```
 Then you need to set up the ssh keys
 Either create a new ssh key (id_rsa, id_rsa.pub) and copy in id_rsa.pub into [GitHub](https://github.com/settings/keys)
