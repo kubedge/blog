@@ -25,29 +25,11 @@ The goal here is to setup ansible inventory, basic playbooks.
 
 ## Ansible Installation on the master node
 
-Let's install ansible using apt-get. A lot of python related depedencies are also installed.
+Let's install ansible-core using apt-get. To reduce the footprint, on the PI we only deploy ansible-core.
+We will leverage ansible-galaxy to install additional collections if needed
 
 ```bash
-sudo apt-get install ansible
-
-Reading package lists... Done
-Building dependency tree
-Reading state information... Done
-The following additional packages will be installed:
-  ieee-data libyaml-0-2 python-cffi-backend python-crypto python-cryptography python-enum34 python-httplib2 python-idna python-ipaddress python-jinja2 python-kerberos python-markupsafe
-  python-netaddr python-paramiko python-pkg-resources python-pyasn1 python-selinux python-setuptools python-six python-xmltodict python-yaml
-Suggested packages:
-  cowsay sshpass python-crypto-dbg python-crypto-doc python-cryptography-doc python-cryptography-vectors python-enum34-doc python-jinja2-doc ipython python-netaddr-docs python-gssapi
-  doc-base python-setuptools-doc
-Recommended packages:
-  python-winrm
-The following NEW packages will be installed:
-  ansible ieee-data libyaml-0-2 python-cffi-backend python-crypto python-cryptography python-enum34 python-httplib2 python-idna python-ipaddress python-jinja2 python-kerberos
-  python-markupsafe python-netaddr python-paramiko python-pkg-resources python-pyasn1 python-selinux python-setuptools python-six python-xmltodict python-yaml
-0 upgraded, 22 newly installed, 0 to remove and 6 not upgraded.
-Need to get 4,556 kB of archives.
-After this operation, 28.4 MB of additional disk space will be used.
-Do you want to continue? [Y/n] y
+sudo apt install ansible-core
 ```
 
 ~~~
@@ -103,19 +85,19 @@ cat /etc/hosts
 ~~~
 
 Let's create an rsa key for Ansible SSH. Note
-the cluster is still using the default pirate account
-created by HypriotOS. Will change is later
+the cluster is still using the default kubedge account
+created by Ubuntu. Will change is later
 once ansible is up.
 ~~~
 cd ~/mgt
 
 ssh-keygen -t rsa -f mgtkey
 
-ssh-copy-id -i mgtkey.pub pirate@kubemaster-pi
-ssh-copy-id -i mgtkey.pub pirate@kube-node01
-ssh-copy-id -i mgtkey.pub pirate@kube-node02
-ssh-copy-id -i mgtkey.pub pirate@kube-node03
-ssh-copy-id -i mgtkey.pub pirate@kube-node04
+ssh-copy-id -i mgtkey.pub kubedge@kubemaster-pi
+ssh-copy-id -i mgtkey.pub kubedge@kube-node01
+ssh-copy-id -i mgtkey.pub kubedge@kube-node02
+ssh-copy-id -i mgtkey.pub kubedge@kube-node03
+ssh-copy-id -i mgtkey.pub kubedge@kube-node04
 ~~~
 
 Create a first ansible host_var. We will use the mgtkey for ssh/ansible.
@@ -125,7 +107,7 @@ cat kubemaster-pi.clusterX.kubedge.cloud
 
 ansible_host: 192.168.2.FOOBAR
 ansible_port: 22
-ansible_user: pirate
+ansible_user: kubedge
 ansible_ssh_private_key_file: mgtkey
 ~~~
 
@@ -227,10 +209,49 @@ ansible picluster -i inventory/ -m setup
 
 #### Update all the nodes in the cluster
 
-Create a simple playbook
+First we need to add docker and kubernetes repos
+
+~~~
+cat playbooks/installkeys.yml
+~~~
+
+```yaml
+---
+- hosts: picluster
+  tasks:
+  - name: Add docker signing key (new GPG method)
+    become: true
+    ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+        force: true
+  - name: Add docker repository
+    become: true
+    ansible.builtin.apt_repository:
+       repo: deb [signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable
+       state: present
+       update_cache: yes
+  - name: Add kubernetes signing key (new GPG method)
+    become: true
+    ansible.builtin.get_url:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        dest: /etc/apt/keyrings/kubernetes-archive-keyring.gpg 
+        mode: '0644'
+        force: true
+  - name: Add kubernetes repository
+    become: true
+    ansible.builtin.apt_repository:
+       repo: deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+       state: present
+       update_cache: yes
+```
+
 ~~~
 cat playbooks/aptupdate.yml
+~~~
 
+```yaml
 ---
 - hosts: picluster
   tasks:
@@ -239,6 +260,7 @@ cat playbooks/aptupdate.yml
     apt:
        update_cache: yes
 ~~~
+```
 
 Run the simple aptupdate playbook
 ~~~

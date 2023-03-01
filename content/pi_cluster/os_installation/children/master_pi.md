@@ -15,45 +15,40 @@ tags: [ansible, hypriot, rpi]
 published: true
 ---
 
-This page describes simple steps to install the OS (HypriotOS) on the PIs.
+This page has been updated to use Ubuntu Server 22.04.02 LTS 64 bits. The instruction used be based on hypriotos
 
 <!--more-->
 
 ## Overview
 
-Kubedge uses HypriotOS because the quickest to set up. SSH and Docker supported by default
+Kubedge uses Ubuntu 64 because the quickest to set up. SSH is enabled by default when using the imager. You don't need to plug a screen or a keyboard to the PI.
 
 {{% notice note %}}
-Even if processor is 64bits, OS is still 32bits. (Memory is small anyway).
-Removed cloud-init once the site was up.
+Raspberry Pi OS is now available in 32 and 64 bits. Ubuntu 22.04 LTS is also available.
+Even so the Raspberry PI 3B have only 1G of RAM, picking the 64 bits architecture provide wider choice of software.
 {{% /notice %}}
 
-### 2018 Procedure
+- The 2018 procedure called for deploying [HypriotOS ARM32V7](https://github.com/hypriot/image-builder-rpi/releases/download/v1.9.0/hypriotos-rpi-v1.9.0.img.zip) and [HypriotOS ARM64V8](https://github.com/DieterReuter/image-builder-rpi64/releases/download/v20180429-184538/hypriotos-rpi64-v20180429-184538.img.zip). Flashing all 3 or 5 SD cards used to be done **Win32DiskImager** or similar. It takes around 30 seconds per card.
 
-- For simple arm32v7 OS, download the operating system from [HypriotOS ARM32V7](https://github.com/hypriot/image-builder-rpi/releases/download/v1.9.0/hypriotos-rpi-v1.9.0.img.zip)
-- For more complex arm64 OS, download the operating system from [HypriotOS ARM64V8](https://github.com/DieterReuter/image-builder-rpi64/releases/download/v20180429-184538/hypriotos-rpi64-v20180429-184538.img.zip)
-- Flash all 3 or 5 SD cards using **Win32DiskImager** or similar. It takes around 30 seconds per card.
+- The updated procedure is based on Rapsberry Pi Imager v1.7.3 and the Ubuntu Server 22.04.02 LTS (64 BIT)
 
-### 2023 Procedure
+![](/images/ubuntu64/Screenshot_2023-02-26_103134.jpg)
+![](/images/ubuntu64/Screenshot_2023-02-26_104230.jpg)
+![](/images/ubuntu64/Screenshot_2023-02-26_104252.jpg)
 
-- Install the Rapsberry Pi Imager v1.7.3
-- Install Ubuntu Server 22.03.02 LTS (64 BIT)
-
-
-
-- Set Hostname to `master-pi`
-- Enable SSH
-    - Use password authentication
-- Set username and password
-    - Username: kubedge
-    - Password: hypriot
-- Configure WLAN
-    - SSSID: yourssid
-    - password: yourssidpwd
-    - wireless LAN country: US
-- Set local settings
-    - America/Chicago
-    - us
+1. Set Hostname to `master-pi`
+2. Enable SSH
+    * Use password authentication (will update the procedure to use key later)
+3. Set username and password
+    * Username: kubedge
+    * Password: hypriot
+4. Configure WLAN
+    * SSSID: yourssid
+    * password: yourssidpwd
+    * wireless LAN country: US
+5. Set local settings
+    * America/Chicago
+    * us
 
 
 ## OS on master on master PI
@@ -65,17 +60,9 @@ The goal here is to get an IP address allocated by your home router to the maste
 
 ### Access the node
 
-#### 2018 Installation procedure
-
-- Insert the SD card in the master PI.
-- Access your home router and look for "black-pearl" IP address.
-- SSH to the node using **cygwin**, **putty** or **moba-xterm** for instance. The credentials are pirate/hypriot.
-
-#### 2023 Installation procedure
-
 - Insert the SD card in the master PI.
 - Access your home router and look for "master-pi" IP address.
-- SSH to the node using **wsl**, **putty** or **moba-xterm** for instance. The credentials are kubedge/hypriot.
+- SSH to the node using **wsl**, **visual-studio-code**  or **moba-xterm** for instance. The credentials are kubedge/hypriot.
 
 ### Freeze your configuration
 
@@ -97,7 +84,9 @@ sudo apt-get update
 sudo apt-get upgrade
 ```
 
-Gain access to latest docker-ce
+Also the latest version of kubernetes is not rely on docker, there is a need to installed containerd.
+The version of containerd provided at this time with ubuntu does not seem to work properly.
+There is a need in install containerd.io
 
 ```bash
 sudo -i
@@ -107,15 +96,7 @@ sh get-docker.sh
 usermod -aG docker pirate
 ```
 
-At the time this article is written 18.09 is not supported yet.
 
-```bash
-sudo apt-cache policy docker-ce
-sudo apt-get remove --purge docker-ce
-sudo apt-get autoremove
-
-sudo apt-get install docker-ce=18.06.1~ce~3-0~debian
-```
 
 ### Update master PI name
 
