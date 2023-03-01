@@ -28,9 +28,33 @@ Even if processor is 64bits, OS is still 32bits. (Memory is small anyway).
 Removed cloud-init once the site was up.
 {{% /notice %}}
 
+### 2018 Procedure
+
 - For simple arm32v7 OS, download the operating system from [HypriotOS ARM32V7](https://github.com/hypriot/image-builder-rpi/releases/download/v1.9.0/hypriotos-rpi-v1.9.0.img.zip)
 - For more complex arm64 OS, download the operating system from [HypriotOS ARM64V8](https://github.com/DieterReuter/image-builder-rpi64/releases/download/v20180429-184538/hypriotos-rpi64-v20180429-184538.img.zip)
 - Flash all 3 or 5 SD cards using **Win32DiskImager** or similar. It takes around 30 seconds per card.
+
+### 2023 Procedure
+
+- Install the Rapsberry Pi Imager v1.7.3
+- Install Ubuntu Server 22.03.02 LTS (64 BIT)
+
+
+
+- Set Hostname to `master-pi`
+- Enable SSH
+    - Use password authentication
+- Set username and password
+    - Username: kubedge
+    - Password: hypriot
+- Configure WLAN
+    - SSSID: yourssid
+    - password: yourssidpwd
+    - wireless LAN country: US
+- Set local settings
+    - America/Chicago
+    - us
+
 
 ## OS on master on master PI
 
@@ -41,9 +65,17 @@ The goal here is to get an IP address allocated by your home router to the maste
 
 ### Access the node
 
+#### 2018 Installation procedure
+
 - Insert the SD card in the master PI.
 - Access your home router and look for "black-pearl" IP address.
 - SSH to the node using **cygwin**, **putty** or **moba-xterm** for instance. The credentials are pirate/hypriot.
+
+#### 2023 Installation procedure
+
+- Insert the SD card in the master PI.
+- Access your home router and look for "master-pi" IP address.
+- SSH to the node using **wsl**, **putty** or **moba-xterm** for instance. The credentials are kubedge/hypriot.
 
 ### Freeze your configuration
 
@@ -87,6 +119,8 @@ sudo apt-get install docker-ce=18.06.1~ce~3-0~debian
 
 ### Update master PI name
 
+#### 2018 procedure
+
 As root, replace **black-pearl** by **kubemaster-pi**, in the two following files:
 
 ```bash
@@ -101,7 +135,11 @@ It seems on HypriotOS 64, you need to do
 sudo hostnamectl set-hostname kubemaster-pi
 ```
 
-### Configure the pirate account
+#### 2013 procedure
+
+Looks like the Raspberri PI imager create a cloud-init and set up the proper name 
+
+### Configure the main admin account
 
 If you prefer to edit using vi instead of nano
 
@@ -114,25 +152,47 @@ Then you need to set up the ssh keys
 Either create a new ssh key (id_rsa, id_rsa.pub) and copy in id_rsa.pub into [GitHub](https://github.com/settings/keys)
 You also need to add those keys in [GerritHub](https://review.gerrithub.io/#/settings/ssh-key)
 
+#### 2018 procecdure
+
 ```bash
 ssh-keygen
 ```
 or install your private and public key into the **/home/pirate/.ssh** directory (The same key you registered in GitHub)
 
 ```bash
-scp id_rsa pirate@<PI>:/home/pirate/.ssh/id_rsa
-scp id_rsa.pub pirate@<PI>:/home/pirate/.ssh/id_rsa.pub
+ssh-copy-id -i hypriotos_rsa pirate@<MASTERPI>
+scp hypriotos_rsa pirate@<MASTERPI>:/home/pirate/.ssh/id_rsa
+scp hypriotos_rsa.pub pirate@<MASTERPI>:/home/pirate/.ssh/id_rsa.pub
+```
+
+#### 2018 procecdure
+
+```bash
+ssh-keygen
+```
+or install your private and public key into the **/home/kubedge/.ssh** directory (The same key you registered in GitHub)
+
+```bash
+ssh-copy-id -i kubedge_rsa kubedge@<MASTERPI>
+scp kubedge_rsa kubedge@<MASTERPI>:/home/kubedge/.ssh/id_rsa
+scp kubedge_rsa.pub kubedge@<MASTERPI>:/home/kubedge/.ssh/id_rsa.pub
 ```
 
 ### Install GIT
 
 Since you have ethernet access, it is a good time to install GIT in order to download usefull scripts from github.com
+GIT is installed by default on Ubuntu 64 bits
 
 ```bash
 sudo apt-get update
 sudo apt-get install git
 sudo apt-get install git-review
+```
 
+```
+git config --global user.email <youremail>
+git config --global user.name <yourname>
+```
 
 ```bash
 $ mkdir -p $HOME/proj/kubedge
